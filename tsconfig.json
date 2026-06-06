@@ -1,0 +1,53 @@
+{
+  "ts-node": {
+    "require": ["tsconfig-paths/register"]
+  },
+  "compilerOptions": {
+    "target": "ES6",
+    "rootDir": "src",
+    "forceConsistentCasingInFileNames": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "removeComments": true,
+    "module": "CommonJS",
+    "declaration": true,
+    "outDir": "dist",
+    "esModuleInterop": true,
+    "importHelpers": true,
+    "baseUrl": ".",
+    "strict": true,
+    "strictBindCallApply": true,
+    "strictFunctionTypes": true,
+    "strictNullChecks": true,
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitThis": true,
+    "noFallthroughCasesInSwitch": true,
+    "strictPropertyInitialization": false,
+    "paths": {
+      "@config/*": ["src/config/*"],
+      "@cronjob/*": ["src/cronjob/*"],
+      "@database/*": ["src/database/*"],
+      "@dto/*": ["src/dto/*"],
+      "@helper/*": ["src/helper/*"],
+      "@interface/*": ["src/interface/*"],
+      "@lib/*": ["src/lib/*"],
+      "@middleware/*": ["src/middleware/*"],
+      "@module/*": ["src/module/*"],
+      "@query/*": ["src/query/*"],
+      "@shared/*": ["src/shared/*"],
+      "@sharedLib/*": ["src/shared/lib/*"],
+      "@logger/*": ["src/shared/logger/*"],
+      "@errorCatcher/*": ["src/shared/logger/logger.internal.js"],
+      "@util/*": ["src/util/*"],
+      "@customTypes/*": ["src/types/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "logs", "uploads", "docs"]
+}

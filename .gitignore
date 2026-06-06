@@ -1,0 +1,12 @@
+# FOLDERS
+/dist
+/log
+/node_modules
+/upload
+/drizzle
+/logs
+
+# FILES
+package-lock.json
+.env
+src/key/*.key
