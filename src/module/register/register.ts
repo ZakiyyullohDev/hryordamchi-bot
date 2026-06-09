@@ -22,9 +22,7 @@ namespace RegisterModel {
             if (!employees.length) {
                 return bot.sendMessage(chatId, "Xodim topilmadi ❌");
             }
-
-            let count = 0;
-
+            
             for (const employee of employees) {
                 if (!employee.employeeChatId) {
                     await DatabaseFunctions.update({
@@ -39,13 +37,7 @@ namespace RegisterModel {
                             }
                         ]
                     });
-
-                    count++;
                 }
-            }
-
-            if (count === 0) {
-                return bot.sendMessage(chatId, "Siz allaqachon tizimdasiz ✅");
             }
 
             return bot.sendMessage(chatId, `Tizimga muvaffaqiyatli kirdingiz ✅`);
