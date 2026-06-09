@@ -34,6 +34,18 @@ namespace EmployeesQuery {
             )
         )
     }
+
+    export async function getTelegramEmployeesByWorkshift(workshiftId: string) {
+        return await db.select()
+        .from(DbTableSchema.employees)
+        .where(
+            and(
+                eq(DbTableSchema.employees.employeeIsDelete, false),
+                eq(DbTableSchema.employees.workshiftId, workshiftId),
+                isNotNull(DbTableSchema.employees.employeeChatId)
+            )
+        )
+    }
     
 }
 

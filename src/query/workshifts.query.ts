@@ -3,6 +3,7 @@ import { and, eq } from "drizzle-orm";
 
 import DbTableSchema from "@database/schema.database";
 import { db } from "@database/pg.database";
+import WorkshiftsInterface from "@interface/workshifts.interface";
 
 namespace WorkshiftsQuery {
     
@@ -87,6 +88,21 @@ namespace WorkshiftsQuery {
             eq(DbTableSchema.workshifts.workshiftId, workshiftId)
         )
         .then(data => data[0])
+    }
+    
+    export async function getWorkshiftsByTime(payloads: WorkshiftsInterface.IGetWorkshiftsByTimePayloads) {
+        const {
+            workshiftComeTime, 
+            workshiftLeaveTime 
+        } = payloads
+        return await db.select()
+        .from(DbTableSchema.workshifts)
+        .where(
+            and(
+                workshiftComeTime ? eq(DbTableSchema.workshifts.workshiftComeTimeSms, workshiftComeTime) : undefined,
+                workshiftLeaveTime ? eq(DbTableSchema.workshifts.workshiftLeaveTimeSms, workshiftLeaveTime) : undefined
+            )
+        )
     }
     
     //! SELECT_END

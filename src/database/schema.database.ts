@@ -294,17 +294,6 @@ export const telegramErroredMessagesTable = pgTable('telegram_errored_messages',
     temCreatedAt: timestamp('tem_created_at', { withTimezone: true }).notNull().defaultNow()
 });
 
-export const telegramSentWarningsTable = pgTable('telegram_sent_warnings', {
-    tswId: uuid('tsw_id').defaultRandom().primaryKey(),
-    tswSentDate: text('tsw_sent_date').notNull(),
-    tswWarningType: warningMessageTypes('tsw_warning_type').notNull(),
-    employeeId: uuid('employee_id').notNull().references(() => employeesTable.employeeId),
-    companyId: uuid('company_id').notNull().references(() => companiesTable.companyId),
-    tswCreatedAt: timestamp('tsw_created_at', { withTimezone: true }).notNull().defaultNow()
-}, (table) => ({
-    uniqueWarning: unique().on(table.employeeId, table.tswSentDate, table.tswWarningType),
-}));
-
 namespace DbTableSchema {
     export const requestsLOGS = requestsLOGSTable
     export const internalErrorsLOGS = internalErrorsLOGSTable
@@ -330,7 +319,6 @@ namespace DbTableSchema {
     export const eskizTokens = eskizTokensTable
     export const pendingJobs = pendingJobsTable
     export const telegramErroredMessages = telegramErroredMessagesTable
-    export const telegramSentWarnings = telegramSentWarningsTable
 
     export const requestLogsRlTypeEnumList = requestLogsRlTypeEnum.enumValues
     export const devicesDeviceStatusEnumList = devicesDeviceStatusEnum.enumValues

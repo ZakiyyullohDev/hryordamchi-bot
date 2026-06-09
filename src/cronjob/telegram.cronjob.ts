@@ -1,10 +1,12 @@
 import TelegramBot from 'node-telegram-bot-api';
 
 import DatabaseFunctions from '@database/functions.database';
+import WorkshiftsQuery from '@query/workshifts.query';
 import AttendanceQuery from '@query/attendance.query';
 import EmployeesQuery from "@query/employees.query";
 import TelegramQuery from '@query/telegram.query';
 import BotHelper from '@helper/bot.helper';
+import GlobalUtils from '@util/util';
 
 namespace TelegramCronjob {
     
@@ -38,147 +40,85 @@ namespace TelegramCronjob {
     }
     
     export async function sendNotComeWarningMessage(bot: TelegramBot) {
-        const employees = await EmployeesQuery.getTelegramEmployees()
-        const todayDate = new Date().toISOString().slice(0, 10)
-        const nowTime = new Date()
+        const { todayDate, nowTimeStr } = GlobalUtils.getNowTime()
         
-        for (const employee of employees) {
-            const workshift = await DatabaseFunctions.select({
-                tableName: 'workshifts',
-                filter: { 
-                    workshiftId: employee.workshiftId
-                }
-            })
+        const matchedWorkshifts = await WorkshiftsQuery.getWorkshiftsByTime({ workshiftComeTime: nowTimeStr })
+        if (!matchedWorkshifts.length) {
+            return
+        };
+        
+        for (const workshift of matchedWorkshifts) {
+            const employees = await EmployeesQuery.getTelegramEmployeesByWorkshift(workshift.workshiftId);
             
-            const [hours, minutes] = workshift.workshiftComeTimeSms.split(':').map(Number)
-            const comeSmsTime = new Date()
-            comeSmsTime.setHours(hours, minutes, 0, 0)
-            
-            if (nowTime < comeSmsTime) {
-                continue
-            }
-            
-            const todaysCheckin = await AttendanceQuery.checkEmployeeOldAttendances({ 
-                employeeId: employee.employeeId,
-                attendanceType: 'checkIn', 
-                attendanceTime: todayDate
-            })
-            
-            if (todaysCheckin.length) {
-                continue
-            }
-            
-            const alreadySent = await DatabaseFunctions.select({
-                tableName: 'telegramSentWarnings',
-                filter: {
+            for (const employee of employees) {
+                const todaysCheckin = await AttendanceQuery.checkEmployeeOldAttendances({
                     employeeId: employee.employeeId,
-                    tswSentDate: todayDate,
-                    tswWarningType: 'notCome'
-                }
-            })
-            
-            if (alreadySent) {
-                continue
-            }
-            
-            const sendingText = `Salom ${employee.employeeLastName} ${employee.employeeFirstName}, siz bugun Kelish ni bosmadingiz. Iltimos, tez orada kelishingizni so'raymiz!`
-            
-            try {
-                await bot.sendMessage(employee.employeeChatId!, sendingText)
+                    attendanceType: 'checkIn',
+                    attendanceTime: todayDate
+                });
                 
-                await DatabaseFunctions.insert({
-                    tableName: 'telegramSentWarnings',
-                    data: {
-                        employeeId: employee.employeeId,
-                        companyId: employee.companyId,
-                        tswSentDate: todayDate,
-                        tswWarningType: 'notCome'
-                    }
-                })
-            } catch (error) {
-                await DatabaseFunctions.insert({
-                    tableName: 'telegramErroredMessages',
-                    data: {
-                        temChatId: employee.employeeChatId!,
-                        temMessage: sendingText,
-                        temErrorMessage: error instanceof Error ? error.message : 'Unknown error',
-                        employeeId: employee.employeeId,
-                        companyId: employee.companyId
-                    }
-                })
+                if (todaysCheckin.length) {
+                    continue
+                };
+                
+                const sendingText = `Salom ${employee.employeeLastName} ${employee.employeeFirstName}, siz bugun Kelish ni bosmadingiz. Iltimos, tez orada kelishingizni so'raymiz!`;
+                
+                try {
+                    await bot.sendMessage(employee.employeeChatId!, sendingText);
+                } catch (error) {
+                    await DatabaseFunctions.insert({
+                        tableName: 'telegramErroredMessages',
+                        data: {
+                            temChatId: employee.employeeChatId!,
+                            temMessage: sendingText,
+                            temErrorMessage: error instanceof Error ? error.message : 'Unknown error',
+                            employeeId: employee.employeeId,
+                            companyId: employee.companyId
+                        }
+                    });
+                }
             }
         }
     }
     
     export async function sendNotLeaveWarningMessage(bot: TelegramBot) {
-        const employees = await EmployeesQuery.getTelegramEmployees()
-        const todayDate = new Date().toISOString().slice(0, 10)
-        const nowTime = new Date()
+        const { todayDate, nowTimeStr } = GlobalUtils.getNowTime()
         
-        for (const employee of employees) {
-            const workshift = await DatabaseFunctions.select({
-                tableName: 'workshifts',
-                filter: { 
-                    workshiftId: employee.workshiftId 
-                }
-            })
+        const matchedWorkshifts = await WorkshiftsQuery.getWorkshiftsByTime({ workshiftLeaveTime: nowTimeStr })
+        if (!matchedWorkshifts.length) {
+            return
+        };
+        
+        for (const workshift of matchedWorkshifts) {
+            const employees = await EmployeesQuery.getTelegramEmployeesByWorkshift(workshift.workshiftId);
             
-            const [hours, minutes] = workshift.workshiftLeaveTimeSms.split(':').map(Number)
-            const leaveSmsTime = new Date()
-            leaveSmsTime.setHours(hours, minutes, 0, 0)
-            
-            if (nowTime < leaveSmsTime) {
-                continue
-            }
-            
-            const todaysCheckout = await AttendanceQuery.checkEmployeeOldAttendances({ 
-                employeeId: employee.employeeId,
-                attendanceType: 'checkOut', 
-                attendanceTime: todayDate
-            })
-            
-            if (todaysCheckout.length) {
-                continue
-            }
-            
-            const alreadySent = await DatabaseFunctions.select({
-                tableName: 'telegramSentWarnings',
-                filter: {
+            for (const employee of employees) {
+                const todaysCheckin = await AttendanceQuery.checkEmployeeOldAttendances({
                     employeeId: employee.employeeId,
-                    tswSentDate: todayDate,
-                    tswWarningType: 'notLeave'
-                }
-            })
-            
-            if (alreadySent) {
-                continue
-            }
-            
-            const sendingText = `Salom ${employee.employeeLastName} ${employee.employeeFirstName}, siz bugun Ketish ni bosmadingiz. Eslatma: Ketishni bosishni unutmang`
-            
-            try {
-                await bot.sendMessage(employee.employeeChatId!, sendingText)
+                    attendanceType: 'checkIn',
+                    attendanceTime: todayDate
+                });
                 
-                await DatabaseFunctions.insert({
-                    tableName: 'telegramSentWarnings',
-                    data: {
-                        employeeId: employee.employeeId,
-                        companyId: employee.companyId,
-                        tswSentDate: todayDate,
-                        tswWarningType: 'notLeave'
-                    }
-                })
-            } catch (error) {
-                await DatabaseFunctions.insert({
-                    tableName: 'telegramErroredMessages',
-                    data: {
-                        temChatId: employee.employeeChatId!,
-                        temMessage: sendingText,
-                        temErrorMessage: error instanceof Error ? error.message : 'Unknown error',
-                        employeeId: employee.employeeId,
-                        companyId: employee.companyId
-                    }
-                })
+                if (todaysCheckin.length) {
+                    continue
+                };
+                
+                const sendingText = `Salom ${employee.employeeLastName} ${employee.employeeFirstName}, siz bugun Ketish ni bosmadingiz. Eslatma ketishni bosishni unutmang.`;
+                
+                try {
+                    await bot.sendMessage(employee.employeeChatId!, sendingText);
+                } catch (error) {
+                    await DatabaseFunctions.insert({
+                        tableName: 'telegramErroredMessages',
+                        data: {
+                            temChatId: employee.employeeChatId!,
+                            temMessage: sendingText,
+                            temErrorMessage: error instanceof Error ? error.message : 'Unknown error',
+                            employeeId: employee.employeeId,
+                            companyId: employee.companyId
+                        }
+                    });
+                }
             }
         }
     }

@@ -1,7 +1,7 @@
 import TelegramBot from "node-telegram-bot-api"
 
 import DatabaseFunctions from "@database/functions.database";
-import RegisterModel from "src/modules/register/register";
+import RegisterModel from "@module/register/register";
 import CommandsUtil from "@util/commands.util";
 import BotHelper from "@helper/bot.helper";
 
@@ -26,26 +26,15 @@ namespace EventsLib {
             })
             
             let sendingText = 'Sizga qanday yordam bera olaman?';
-            let keyboardMarkup = BotHelper.setKeyboardMarkup([
-                [
-                    { 
-                        text: 'Botni qayta ishga tushirish 🔄' 
-                    }
-                ]
-            ])
+            let keyboardMarkup
             
             if (!isEmployeeFound) {
                 sendingText = 'Registratsiya qilish uchun Telefon Raqamingizni yuboring 📱'
                 keyboardMarkup = BotHelper.setKeyboardMarkup([
                     [
                         {
-                            text: 'Botni qayta ishga tushirish 🔄' 
-                        }
-                    ],
-                    [
-                        {
                             text: 'Telefon raqamingizni yuboring 📱', 
-                            request_contact: true 
+                            request_contact: true
                         }
                     ]
                 ])
