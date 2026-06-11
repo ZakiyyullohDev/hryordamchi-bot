@@ -4,7 +4,8 @@ import TelegramCronjob from "@cronjob/telegram.cronjob";
 import newCronJob from "@lib/cronjob.lib";
 
 async function runConfigCronJobs(bot: TelegramBot) {
-    newCronJob('attendances', '0 */1 * * * *', () => TelegramCronjob.runner(bot))
+    newCronJob('warningMessages', '* * * * *', () => TelegramCronjob.runner(bot))
+    newCronJob('attendances', '*/1 * * * * *', () => TelegramCronjob.resendAttendanceMessages(bot))
 }
 
 export default runConfigCronJobs

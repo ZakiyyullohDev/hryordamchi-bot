@@ -9,7 +9,6 @@ import GlobalUtils from '@util/util';
 namespace TelegramCronjob {
     
     export async function runner(bot: TelegramBot) {
-        await resendAttendanceMessages(bot)
         await sendNotComeWarningMessage(bot)
         await sendNotLeaveWarningMessage(bot)
     }
