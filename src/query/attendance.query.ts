@@ -74,7 +74,7 @@ namespace AttendanceQuery {
     export async function getNotSendedAttendancesMessages(limit: number = 20) {
         return await db.select({
             attendanceId: DbTableSchema.attendances.attendanceId,
-            attendanceTime: sql<string>`${DbTableSchema.attendances.attendanceTime}`,
+            attendanceTime: sql<string>`${DbTableSchema.attendances.attendanceTime}::timestamp at time zone '+5'`,
             attendanceType: DbTableSchema.attendances.attendanceType,
             attendanceMessageId: DbTableSchema.attendances.attendanceMessageId,
             employeeId: DbTableSchema.employees.employeeId,
