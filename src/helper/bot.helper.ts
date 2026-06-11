@@ -52,18 +52,20 @@ namespace BotHelper {
             .replace(/№/g, 'No:')
             .replace(/[“”]/g, '"')
             
-            await bot.sendMessage(employee.employeeChatId, fixedText);
-        } catch (error) {
-            await DatabaseFunctions.insert({
-                tableName: 'telegramErroredMessages',
+            const sentMessage = await bot.sendMessage(employee.employeeChatId, fixedText);
+            await DatabaseFunctions.update({
                 data: {
-                    temChatId: payloads.employee.employeeChatId!,
-                    temMessage: JSON.stringify(payloads),
-                    temErrorMessage: error instanceof Error ? error.message : 'Unknown error',
-                    employeeId: payloads.employee.employeeId,
-                    companyId: payloads.employee.companyId
-                }
+                    attendanceMessageId: sentMessage.message_id
+                },
+                tableName: 'attendances',
+                targets: [
+                    {
+                        targetColumn: 'attendanceId',
+                        targetValue: attendance.attendanceId
+                    }
+                ]
             })
+        } catch (error) {
         }
     }
 }

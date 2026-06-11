@@ -1,7 +1,6 @@
 import { bigint, json, pgTable, smallint, text, timestamp, uuid, varchar, boolean, integer, unique, serial, pgEnum, index, numeric, bigserial } from 'drizzle-orm/pg-core';
 import { Table } from 'drizzle-orm';
 
-export const warningMessageTypes = pgEnum('warning_message_types', [ 'notCome', 'notLeave' ]);
 export const requestLogsRlTypeEnum = pgEnum('request_logs_rl_type_enum', [ 'SUCCESS', 'ERROR' ]);
 export const devicesDeviceStatusEnum = pgEnum('devices_device_status_enum', [ 'online', 'offline' ]);
 export const addressesAddressTypeEnum = pgEnum('addresses_address_type_enum', [ 'region', 'district', 'street' ]);
@@ -225,6 +224,7 @@ export const attendancesTable = pgTable('attendances', {
     attendanceId: uuid('attendance_id').defaultRandom().primaryKey(),
     attendanceTime: timestamp('attendance_time', { withTimezone: true }).notNull(),
     attendanceType: attendancesAttendanceTypeEnum('attendance_type').notNull(),
+    attendanceMessageId: integer('attendance_message_id'),
     employeeId: uuid('employee_id').references(() => employeesTable.employeeId).notNull(),
     branchId: uuid('branch_id').references(() => branchesTable.branchId).notNull(),
     companyId: uuid('company_id').references(() => companiesTable.companyId).notNull(),
@@ -284,16 +284,6 @@ export const pendingJobsTable = pgTable('pending_jobs', {
     uniquePending: unique().on(table.pjType, table.deviceId, table.employeeId)
 }));
 
-export const telegramErroredMessagesTable = pgTable('telegram_errored_messages', {
-    temId: uuid('tem_id').defaultRandom().primaryKey(),
-    temChatId: bigint('tem_chat_id', { mode: 'number' }).notNull(),
-    temMessage: text('tem_message').notNull(),
-    temErrorMessage: text('tem_error_message').notNull(),
-    employeeId: uuid('employee_id').notNull().references(() => employeesTable.employeeId),
-    companyId: uuid('company_id').notNull().references(() => companiesTable.companyId),
-    temCreatedAt: timestamp('tem_created_at', { withTimezone: true }).notNull().defaultNow()
-});
-
 namespace DbTableSchema {
     export const requestsLOGS = requestsLOGSTable
     export const internalErrorsLOGS = internalErrorsLOGSTable
@@ -318,7 +308,6 @@ namespace DbTableSchema {
     export const paymentTransactions = paymentTransactionsTable
     export const eskizTokens = eskizTokensTable
     export const pendingJobs = pendingJobsTable
-    export const telegramErroredMessages = telegramErroredMessagesTable
 
     export const requestLogsRlTypeEnumList = requestLogsRlTypeEnum.enumValues
     export const devicesDeviceStatusEnumList = devicesDeviceStatusEnum.enumValues

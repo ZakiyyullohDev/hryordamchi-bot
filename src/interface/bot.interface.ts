@@ -21,11 +21,10 @@ namespace BotInterface {
     }
     
     export interface Attendance {
+        attendanceId: string;
         attendanceTime: string;
         attendanceType: "checkIn" | "checkOut";
-        employeeId: string;
-        branchId: string;
-        companyId: string;
+        attendanceMessageId: number | null;
     }
     
     export interface AttendanceMessagePayloads {

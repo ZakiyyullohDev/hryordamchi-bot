@@ -1,4 +1,4 @@
-import { and, eq, gte, lte, sql } from "drizzle-orm";
+import { and, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 
 import AttendancesInterface from "@interface/attendances.interface";
 import DbTableSchema from "@database/schema.database";
@@ -69,6 +69,33 @@ namespace AttendanceQuery {
                 eq(DbTableSchema.attendances.attendanceType, attendanceType),
             )
         )
+    }
+
+    export async function getNotSendedAttendancesMessages(limit: number = 20) {
+        return await db.select({
+            attendanceId: DbTableSchema.attendances.attendanceId,
+            attendanceTime: sql<string>`${DbTableSchema.attendances.attendanceTime}`,
+            attendanceType: DbTableSchema.attendances.attendanceType,
+            attendanceMessageId: DbTableSchema.attendances.attendanceMessageId,
+            employeeId: DbTableSchema.employees.employeeId,
+            employeeFirstName: DbTableSchema.employees.employeeFirstName,
+            employeeLastName: DbTableSchema.employees.employeeLastName,
+            employeeFatherName: DbTableSchema.employees.employeeFatherName,
+            employeeChatId: DbTableSchema.employees.employeeChatId,
+            workshiftId: DbTableSchema.employees.workshiftId,
+            companyId: DbTableSchema.employees.companyId
+        })
+        .from(DbTableSchema.attendances)
+        .innerJoin(DbTableSchema.employees, eq(DbTableSchema.attendances.employeeId, DbTableSchema.employees.employeeId))
+        .where(
+            and(
+                eq(DbTableSchema.employees.employeeIsDelete, false),
+                gte(DbTableSchema.attendances.attendanceTime, new Date('2026-06-10T00:00:00+00:00')),
+                isNotNull(DbTableSchema.employees.employeeChatId),
+                isNull(DbTableSchema.attendances.attendanceMessageId),
+            )
+        )
+        .limit(limit)
     }
     
     //! SELECT_END
