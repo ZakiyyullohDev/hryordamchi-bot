@@ -31,6 +31,11 @@ namespace BotInterface {
         employee: Employee;
         attendance: Attendance;
     }
+
+    export interface AttendaneLateDetectPayloads {
+        employeeId: string;
+        workshiftId: string;
+    }
     
 }
 

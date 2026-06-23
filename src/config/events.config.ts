@@ -25,7 +25,7 @@ namespace EventsLib {
                 tableName: 'employees'
             })
             
-            let sendingText = 'Sizga qanday yordam bera olaman?';
+            let sendingText = 'Botga xush kelibsiz !';
             let keyboardMarkup
             
             if (!isEmployeeFound) {

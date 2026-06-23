@@ -2,6 +2,7 @@ import TelegramBot from "node-telegram-bot-api";
 
 import DatabaseFunctions from "@database/functions.database";
 import WorkshiftsQuery from "@query/workshifts.query";
+import AttendanceQuery from "@query/attendance.query";
 import BotInterface from "@interface/bot.interface";
 import GlobalUtils from "@util/util";
 
@@ -67,6 +68,45 @@ namespace BotHelper {
             })
         } catch (error) {
         }
+    }
+    
+    export async function attendanceLateDetect(payloads: BotInterface.AttendaneLateDetectPayloads) {
+        const {
+            employeeId,
+            workshiftId
+        } = payloads;
+        
+        const todaysAttendances = await AttendanceQuery.checkEmployeeOldAttendances({
+            attendanceTime: new Date().toISOString(),
+            attendanceType: 'checkIn',
+            employeeId
+        });
+        
+        const workshift = await DatabaseFunctions.select({
+            filter: {
+                workshiftId
+            },
+            tableName: 'workshifts'
+        });
+        
+        const attendance = todaysAttendances[0];
+        const [hours, minutes, seconds = '00'] = workshift.workshiftComeTime.split(':');
+        const comeTime = new Date(attendance.attendanceTime);
+        
+        comeTime.setHours(
+            Number(hours),
+            Number(minutes),
+            Number(seconds),
+            0
+        );
+        
+        const lateMs = Math.max(0, attendance.attendanceTime.getTime() - comeTime.getTime());
+        const lateMinutes = Math.floor(lateMs / 1000 / 60);
+        
+        return {
+            isLate: lateMs > 0,
+            lateText: `${Math.floor(lateMinutes / 60)} soat ${lateMinutes % 60} daqiqa`
+        };
     }
 }
 

@@ -1,4 +1,4 @@
-import { and, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
+import { and, asc, eq, gte, isNotNull, isNull, lte, sql } from "drizzle-orm";
 
 import AttendancesInterface from "@interface/attendances.interface";
 import DbTableSchema from "@database/schema.database";
@@ -70,23 +70,24 @@ namespace AttendanceQuery {
             )
         )
     }
-
+    
     export async function getNotSendedAttendancesMessages(limit: number = 20) {
         return await db.select({
             attendanceId: DbTableSchema.attendances.attendanceId,
-            attendanceTime: sql<string>`${DbTableSchema.attendances.attendanceTime}::timestamp at time zone '+5'`,
+            attendanceTime: DbTableSchema.attendances.attendanceTime,
             attendanceType: DbTableSchema.attendances.attendanceType,
-            attendanceMessageId: DbTableSchema.attendances.attendanceMessageId,
             employeeId: DbTableSchema.employees.employeeId,
             employeeFirstName: DbTableSchema.employees.employeeFirstName,
             employeeLastName: DbTableSchema.employees.employeeLastName,
-            employeeFatherName: DbTableSchema.employees.employeeFatherName,
+            employeeGender: DbTableSchema.employees.employeeGender,
+            employeeImg: DbTableSchema.employees.employeeImg,
             employeeChatId: DbTableSchema.employees.employeeChatId,
             workshiftId: DbTableSchema.employees.workshiftId,
-            companyId: DbTableSchema.employees.companyId
+            roleName: DbTableSchema.roles.roleName
         })
         .from(DbTableSchema.attendances)
         .innerJoin(DbTableSchema.employees, eq(DbTableSchema.attendances.employeeId, DbTableSchema.employees.employeeId))
+        .innerJoin(DbTableSchema.roles, eq(DbTableSchema.employees.roleId, DbTableSchema.roles.roleId))
         .where(
             and(
                 eq(DbTableSchema.employees.employeeIsDelete, false),
@@ -98,14 +99,30 @@ namespace AttendanceQuery {
         .limit(limit)
     }
     
+    export async function getEmployeeTodayCheckIn(employeeId: string) {
+        return await db.select()
+        .from(DbTableSchema.attendances)
+        .where(
+            and(
+                eq(DbTableSchema.attendances.employeeId, employeeId),
+                eq(DbTableSchema.attendances.attendanceType, 'checkIn'),
+                sql`${DbTableSchema.attendances.attendanceTime}::date = CURRENT_DATE`
+            )
+        )
+        .orderBy(
+            asc(DbTableSchema.attendances.attendanceTime)
+        )
+        .then(data => data[0]);
+    }
+    
     //! SELECT_END
     
     
     
     //! INSERT_START
-
-
-
+    
+    
+    
     //! INSERT_END
     
     

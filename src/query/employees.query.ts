@@ -9,10 +9,7 @@ namespace EmployeesQuery {
         return await db.select()
         .from(DbTableSchema.employees)
         .where(
-            or(
-                eq(DbTableSchema.employees.employeePhoneNumberMain, phoneNumber),
-                eq(DbTableSchema.employees.employeePhoneNumberOptional, phoneNumber)
-            )
+            eq(DbTableSchema.employees.employeePhoneNumberMain, phoneNumber)
         )
     }
     

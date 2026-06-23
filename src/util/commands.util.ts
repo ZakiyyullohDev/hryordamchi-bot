@@ -4,18 +4,18 @@ namespace CommandsUtil {
     export const beforeRegister: BotInterface.setCommand[] = [
         {
             command: 'start',
-            description: 'Bot ni qayta ishga tushirish'
+            description: 'Bot ni qayta ishga tushirish ♻️'
         }
     ]
 
     export const listenerCommands: BotInterface.setCommand[] = [
         {
             command: 'start',
-            description: 'Bot ni qayta ishga tushirish'
+            description: 'Bot ni qayta ishga tushirish ♻️'
         },
         {
-            command: 'clear',
-            description: 'Bot ni tozalash'
+            command: 'stop',
+            description: `Bot ni To'xtatish 🛑`
         }
     ]
 }

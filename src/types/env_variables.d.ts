@@ -4,6 +4,8 @@ export type EnvVariables =
   | "DOMAIN"
   | "PROJECT_NAME"
   | "TELEGRAM_BOT_TOKEN"
+  | "S3_LOGIN"
+  | "S3_PASSWORD"
   | "JWT_EXPIRATION"
   | "ORIGIN"
   | "CREDENTIALS"

@@ -4,6 +4,8 @@ import DatabaseFunctions from '@database/functions.database';
 import WorkshiftsQuery from '@query/workshifts.query';
 import AttendanceQuery from '@query/attendance.query';
 import EmployeesQuery from "@query/employees.query";
+import BotHelper from '@helper/bot.helper';
+import S3Helper from '@helper/s3.helper';
 import GlobalUtils from '@util/util';
 
 namespace TelegramCronjob {
@@ -14,58 +16,134 @@ namespace TelegramCronjob {
     }
     
     export async function resendAttendanceMessages(bot: TelegramBot) {
-        const notSendedAttendanceMessages = await AttendanceQuery.getNotSendedAttendancesMessages()
-        if (!notSendedAttendanceMessages.length) {
-            return
-        }
+        const notSendedAttendanceMessages = await AttendanceQuery.getNotSendedAttendancesMessages();
         
-        const requests = notSendedAttendanceMessages.map(async attendance => {
+        if (!notSendedAttendanceMessages.length) {
+            return;
+        }
+
+        const requests = notSendedAttendanceMessages.map(async item => {
             try {
-                const workshiftTexts = await WorkshiftsQuery.getWorkshiftTexts(attendance.workshiftId)
+                let lateTimeText = '';
                 
-                const sendingText = attendance.attendanceType == 'checkIn' ? workshiftTexts.workshiftComeText : workshiftTexts.workshiftLeaveText;
-                if (!sendingText) {
-                    return;
+                const { date, time } = GlobalUtils.getDateAndTime(item.attendanceTime);
+                
+                const checkType = item.attendanceType === 'checkIn' ? '✅ Ishga <b>Kelish</b> qayd etildi' : '👋 Ishdan <b>Ketish</b> qayd etildi';
+                const genderEmoji = item.employeeGender ? "🧑‍💼" : "👩‍💼";
+                
+                const lateDetect = await BotHelper.attendanceLateDetect({
+                    employeeId: item.employeeId,
+                    workshiftId: item.workshiftId
+                });
+                
+                if (lateDetect.isLate) {
+                    lateTimeText = `⚠️ <b>Kechga qolingan vaqt</b>: ${lateDetect.lateText}`;
                 }
                 
-                const fixedText = sendingText
-                .replace('@ism', attendance.employeeFirstName)
-                .replace('@familiya', attendance.employeeLastName)
-                .replace('@sharif', attendance.employeeFatherName)
-                .replace('@sana', GlobalUtils.convertDateToDeviceFormat(
-                    attendance.attendanceTime.toString()
-                ) || '')
-                .replace('@vaqt', attendance.attendanceTime.slice(11, 16))
-                .replace(/―/g, '-')
-                .replace(/`/g, "'")
-                .replace(/\(/g, '[')
-                .replace(/\)/g, ']')
-                .replace(/‘/g, "'")
-                .replace(/№/g, 'No:')
-                .replace(/[“”]/g, '"')
+                let fixedText = '';
                 
-                const sentMessage = await bot.sendMessage(attendance.employeeChatId!, fixedText);
+                if (item.attendanceType === 'checkIn') {
+                    fixedText = `
+${checkType}
+
+${genderEmoji} <b>Ism</b>: ${item.employeeFirstName} ${item.employeeLastName}
+💼 <b>Lavozim</b>: ${item.roleName}
+                    
+📆 <b>Sana</b>: ${GlobalUtils.convertDateUzbekFormat(item.attendanceTime)} (${date})
+🕘 <b>Vaqt</b>: ${time}
+${lateTimeText}
+                    
+🚀 Ish kuningiz unumli o'tsin!
+`;
+                } else {
+                    const checkInAttendance = await AttendanceQuery.getEmployeeTodayCheckIn(item.employeeId);
+
+                    let checkInTime = '-';
+                    let workedTime = '-';
+                    
+                    if (checkInAttendance) {
+                        const { time: inTime } = GlobalUtils.getDateAndTime(
+                            checkInAttendance.attendanceTime
+                        );
+                        
+                        checkInTime = inTime;
+                        
+                        const diffMs =
+                        new Date(item.attendanceTime).getTime() -
+                        new Date(checkInAttendance.attendanceTime).getTime();
+                        
+                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const minutes = Math.floor(
+                            (diffMs % (1000 * 60 * 60)) / (1000 * 60)
+                        );
+                        
+                        workedTime = `${hours} soat ${minutes} daqiqa`;
+                    }
+                    
+                    fixedText = `
+${checkType}
+                    
+${genderEmoji} <b>Ism</b>: ${item.employeeFirstName} ${item.employeeLastName}
+💼 <b>Lavozim</b>: ${item.roleName}
+                    
+📆 <b>Sana</b>: ${GlobalUtils.convertDateUzbekFormat(item.attendanceTime)} (${date})
+                    
+🕘 <b>Kelgan vaqt</b>: ${checkInTime}
+🕔 <b>Ketgan vaqt</b>: ${time}
+⏱ <b>Ishlagan vaqt</b>: ${workedTime}
+                    
+😊 Yaxshi dam oling!
+`;
+                }
+                
+                const employeeImgDatas = await S3Helper.ImageRecieverById(
+                    item.employeeImg
+                );
+                
+                let sentMessage;
+                
+                if (!employeeImgDatas) {
+                    sentMessage = await bot.sendMessage(
+                        item.employeeChatId!,
+                        fixedText
+                    );
+                } else {
+                    const photoBuffer = Buffer.from(
+                        employeeImgDatas.file_data,
+                        "base64"
+                    );
+                    
+                    sentMessage = await bot.sendPhoto(
+                        item.employeeChatId!,
+                        photoBuffer,
+                        {
+                            caption: fixedText,
+                            parse_mode: 'HTML'
+                        }
+                    );
+                }
                 
                 await DatabaseFunctions.update({
                     data: {
                         attendanceMessageId: sentMessage.message_id
                     },
-                    tableName: 'attendances',
+                    tableName: "attendances",
                     targets: [
                         {
-                            targetColumn: 'attendanceId',
-                            targetValue: attendance.attendanceId
+                            targetColumn: "attendanceId",
+                            targetValue: item.attendanceId
                         }
                     ]
-                })
-
+                });
+                
                 return true;
-            } catch {
+            } catch (error) {
+                console.log(error)
                 return false;
             }
-        })
+        });
         
-        await Promise.all(requests)
+        await Promise.all(requests);
     }
     
     export async function sendNotComeWarningMessage(bot: TelegramBot) {
