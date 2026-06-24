@@ -96,6 +96,9 @@ namespace AttendanceQuery {
                 isNull(DbTableSchema.attendances.attendanceMessageId),
             )
         )
+        .orderBy(
+            asc(DbTableSchema.attendances.attendanceTime)
+        )
         .limit(limit)
     }
     

@@ -17,7 +17,7 @@ namespace TelegramCronjob {
     
     export async function resendAttendanceMessages(bot: TelegramBot) {
         const notSendedAttendanceMessages = await AttendanceQuery.getNotSendedAttendancesMessages();
-        
+
         if (!notSendedAttendanceMessages.length) {
             return;
         }
@@ -138,7 +138,6 @@ ${genderEmoji} <b>Ism</b>: ${item.employeeFirstName} ${item.employeeLastName}
                 
                 return true;
             } catch (error) {
-                console.log(error)
                 return false;
             }
         });
