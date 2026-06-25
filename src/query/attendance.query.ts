@@ -83,10 +83,12 @@ namespace AttendanceQuery {
             employeeImg: DbTableSchema.employees.employeeImg,
             employeeChatId: DbTableSchema.employees.employeeChatId,
             workshiftId: DbTableSchema.employees.workshiftId,
+            branchName: DbTableSchema.branches.branchName,
             roleName: DbTableSchema.roles.roleName
         })
         .from(DbTableSchema.attendances)
         .innerJoin(DbTableSchema.employees, eq(DbTableSchema.attendances.employeeId, DbTableSchema.employees.employeeId))
+        .innerJoin(DbTableSchema.branches, eq(DbTableSchema.employees.branchId, DbTableSchema.branches.branchId))
         .innerJoin(DbTableSchema.roles, eq(DbTableSchema.employees.roleId, DbTableSchema.roles.roleId))
         .where(
             and(

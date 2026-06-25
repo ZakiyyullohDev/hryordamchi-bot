@@ -33,8 +33,20 @@ namespace EmployeesQuery {
     }
 
     export async function getTelegramEmployeesByWorkshift(workshiftId: string) {
-        return await db.select()
+        return await db.select({
+            employeeId: DbTableSchema.employees.employeeId,
+            employeeFirstName: DbTableSchema.employees.employeeFirstName,
+            employeeLastName: DbTableSchema.employees.employeeLastName,
+            employeeFatherName: DbTableSchema.employees.employeeFatherName,
+            employeeChatId: DbTableSchema.employees.employeeChatId,
+            workshiftId: DbTableSchema.employees.workshiftId,
+            roleName: DbTableSchema.roles.roleName,
+            branchName: DbTableSchema.branches.branchName,
+            companyId: DbTableSchema.employees.companyId
+        })
         .from(DbTableSchema.employees)
+        .innerJoin(DbTableSchema.roles, eq(DbTableSchema.employees.roleId, DbTableSchema.roles.roleId))
+        .innerJoin(DbTableSchema.branches, eq(DbTableSchema.employees.branchId, DbTableSchema.branches.branchId))
         .where(
             and(
                 eq(DbTableSchema.employees.employeeIsDelete, false),

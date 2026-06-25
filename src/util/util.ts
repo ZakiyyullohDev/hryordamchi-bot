@@ -53,7 +53,8 @@ namespace GlobalUtils {
         
         return {
             date: `${day}.${month}.${year}`,
-            time: `${hours}:${minutes}:${seconds}`
+            time: `${hours}:${minutes}:${seconds}`,
+            timeWithoutSeconds: `${hours}:${minutes}`
         }
     }
     
