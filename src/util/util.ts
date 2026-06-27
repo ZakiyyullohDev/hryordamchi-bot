@@ -12,14 +12,18 @@ namespace GlobalUtils {
     
     export function getNowTime() {
         const now = new Date();
-        const nowTime = new Date(now.getTime() + (now.getTimezoneOffset() * 60000) + (5 * 3600000));
-        const todayDate = nowTime.toISOString().slice(0, 10);
         
-        const nowHH = String(nowTime.getHours()).padStart(2, '0');
-        const nowMM = String(nowTime.getMinutes()).padStart(2, '0');
-        const nowTimeStr = `${nowHH}:${nowMM}`;
+        const nowTime = new Date(now.getTime() + (5 * 60 * 60 * 1000));
+        const isoString = nowTime.toISOString(); 
+        const todayDate = isoString.slice(0, 10);
+
+        const nowTimeStr = isoString.slice(11, 16);
         
-        return { nowTime, todayDate, nowTimeStr };
+        return { 
+            nowTime,
+            todayDate,
+            nowTimeStr
+        };
     }
     
     export function convertDateUzbekFormat(dateInput: string | Date): string {
@@ -43,13 +47,14 @@ namespace GlobalUtils {
     }
     
     export function getDateAndTime(dateTime: Date) {
-        const year = dateTime.getFullYear()
-        const month = String(dateTime.getMonth() + 1).padStart(2, '0')
-        const day = String(dateTime.getDate()).padStart(2, '0')
+        const utc5Time = new Date(dateTime.getTime() + 18000000);
         
-        const hours = String(dateTime.getHours()).padStart(2, '0')
-        const minutes = String(dateTime.getMinutes()).padStart(2, '0')
-        const seconds = String(dateTime.getSeconds()).padStart(2, '0')
+        const year = utc5Time.getUTCFullYear()
+        const month = String(utc5Time.getUTCMonth() + 1).padStart(2, '0')
+        const day = String(utc5Time.getUTCDate()).padStart(2, '0')
+        const hours = String(utc5Time.getUTCHours()).padStart(2, '0')
+        const minutes = String(utc5Time.getUTCMinutes()).padStart(2, '0')
+        const seconds = String(utc5Time.getUTCSeconds()).padStart(2, '0')
         
         return {
             date: `${day}.${month}.${year}`,
