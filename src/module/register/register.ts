@@ -28,7 +28,8 @@ namespace RegisterModel {
                     await DatabaseFunctions.update({
                         tableName: "employees",
                         data: {
-                            employeeChatId: chatId
+                            employeeChatId: chatId,
+                            employeeCreatedAt: new Date()
                         },
                         targets: [
                             {
@@ -40,7 +41,7 @@ namespace RegisterModel {
                 }
             }
 
-            return bot.sendMessage(chatId, `Tizimga muvaffaqiyatli kirdingiz ✅`);
+            return bot.sendMessage(chatId, `Tizimga muvaffaqiyatli kirdingiz ✅`, { reply_markup: { remove_keyboard: true } });
         });
     }
 }

@@ -88,14 +88,14 @@ namespace AttendanceQuery {
         })
         .from(DbTableSchema.attendances)
         .innerJoin(DbTableSchema.employees, eq(DbTableSchema.attendances.employeeId, DbTableSchema.employees.employeeId))
-        .innerJoin(DbTableSchema.branches, eq(DbTableSchema.employees.branchId, DbTableSchema.branches.branchId))
+        .innerJoin(DbTableSchema.branches, eq(DbTableSchema.attendances.branchId, DbTableSchema.branches.branchId))
         .innerJoin(DbTableSchema.roles, eq(DbTableSchema.employees.roleId, DbTableSchema.roles.roleId))
         .where(
             and(
                 eq(DbTableSchema.employees.employeeIsDelete, false),
-                gte(DbTableSchema.attendances.attendanceTime, new Date('2026-06-10T00:00:00+00:00')),
                 isNotNull(DbTableSchema.employees.employeeChatId),
                 isNull(DbTableSchema.attendances.attendanceMessageId),
+                gte(DbTableSchema.attendances.attendanceTime, DbTableSchema.employees.employeeCreatedAt),
             )
         )
         .orderBy(

@@ -7,6 +7,7 @@ import EmployeesQuery from "@query/employees.query";
 import GlobalUtils from '@util/util';
 
 namespace TelegramCronjob {
+    let isResending = false
     
     export async function runner(bot: TelegramBot) {
         await sendNotComeWarningMessage(bot)
@@ -14,35 +15,40 @@ namespace TelegramCronjob {
     }
     
     export async function resendAttendanceMessages(bot: TelegramBot) {
-        const notSendedAttendanceMessages = await AttendanceQuery.getNotSendedAttendancesMessages();
-        if (!notSendedAttendanceMessages.length) {
-            return;
-        }
+        if (isResending) return
+        isResending = true;
         
-        for (const item of notSendedAttendanceMessages) {
+        try {
+            const notSendedAttendanceMessages = await AttendanceQuery.getNotSendedAttendancesMessages();
+            if (!notSendedAttendanceMessages.length) {
+                isResending = false;
+                return;
+            }
             
-            try {
-                const { date, timeWithoutSeconds } = GlobalUtils.getDateAndTime(item.attendanceTime);
-                const checkType = item.attendanceType === 'checkIn' ? '✅ <b>Ishga Kelish qayd etildi</b>' : '👋 <b>Ishdan Ketish qayd etildi</b>';
-
-                let fixedText = '';
+            for (const item of notSendedAttendanceMessages) {
                 
-                if (item.attendanceType === 'checkIn') {
-                    fixedText = `
-${checkType}
-
+                try {
+                    const { date, timeWithoutSeconds } = GlobalUtils.getDateAndTime(item.attendanceTime);
+                    const checkType = item.attendanceType === 'checkIn' ? '✅ <b>Ishga Kelish qayd etildi</b>' : '👋 <b>Ishdan Ketish qayd etildi</b>';
+                    
+                    let fixedText = '';
+                    
+                    if (item.attendanceType === 'checkIn') {
+                        fixedText = `
+                        ${checkType}
+                        
 👤 ${item.employeeFirstName} ${item.employeeLastName}
 💼 ${item.roleName}
 🏢 ${item.branchName}
-
+                        
 🕘 <b>${date} ${timeWithoutSeconds}</b>
 🚀 Ish kuningiz unumli o'tsin!
 `;
-                } else {
-                    
-                    fixedText = `
-${checkType}
-
+                    } else {
+                        
+                        fixedText = `
+                        ${checkType}
+                        
 👤 ${item.employeeFirstName} ${item.employeeLastName}
 💼 ${item.roleName}
 🏢 ${item.branchName}
@@ -50,29 +56,33 @@ ${checkType}
 🕘 <b>${date} ${timeWithoutSeconds}</b>
 😊 Yaxshi dam oling!
 `;
+                    }
+                    
+                    let sentMessage = await bot.sendMessage(item.employeeChatId!, fixedText, {
+                        parse_mode: 'HTML'
+                    });
+                    
+                    await DatabaseFunctions.update({
+                        data: {
+                            attendanceMessageId: sentMessage.message_id
+                        },
+                        tableName: "attendances",
+                        targets: [
+                            {
+                                targetColumn: "attendanceId",
+                                targetValue: item.attendanceId
+                            }
+                        ]
+                    });
+                    
+                    return                
+                } catch (error) {
+                    continue
                 }
-                
-                let sentMessage = await bot.sendMessage(item.employeeChatId!, fixedText, {
-                    parse_mode: 'HTML'
-                });
-                
-                await DatabaseFunctions.update({
-                    data: {
-                        attendanceMessageId: sentMessage.message_id
-                    },
-                    tableName: "attendances",
-                    targets: [
-                        {
-                            targetColumn: "attendanceId",
-                            targetValue: item.attendanceId
-                        }
-                    ]
-                });
-                
-                return true;
-            } catch (error) {
-                return false;
             }
+        } catch (error) {
+        } finally {
+            isResending = false;
         }
     }
     
@@ -101,7 +111,7 @@ ${checkType}
                 
                 const sendingText = `
 ⚠️ <b>Ishga kelish qayd etilmadi</b>
-
+                
 👤 ${employee.employeeFirstName} ${employee.employeeLastName}
 💼 ${employee.roleName}
 🏢 ${employee.branchName}
@@ -142,7 +152,7 @@ ${checkType}
                 
                 const sendingText = `
 ⚠️ <b>Ishdan ketish qayd etilmadi</b>
-
+                
 👤 ${employee.employeeFirstName} ${employee.employeeLastName}
 💼 ${employee.roleName}
 🏢 ${employee.branchName}
