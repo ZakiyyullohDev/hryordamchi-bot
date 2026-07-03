@@ -175,6 +175,7 @@ export const employeesTable = pgTable('employees', {
     departmentId: uuid('department_id').references(() => departmentsTable.departmentId).notNull(),
     workshiftId: uuid('workshift_id').references(() => workshiftsTable.workshiftId).notNull(),
     companyId: uuid('company_id').references(() => companiesTable.companyId).notNull(),
+    employeeTelegramJoinedAt: timestamp('employee_telegram_joined_at', { withTimezone: true }),
     employeeCreatedAt: timestamp('employee_created_at', { withTimezone: true }).notNull().defaultNow()
 }, (table) => ({
     uniqueLogin: unique().on(table.employeeLogin),

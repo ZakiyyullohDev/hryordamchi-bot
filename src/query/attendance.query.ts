@@ -95,7 +95,7 @@ namespace AttendanceQuery {
                 eq(DbTableSchema.employees.employeeIsDelete, false),
                 isNotNull(DbTableSchema.employees.employeeChatId),
                 isNull(DbTableSchema.attendances.attendanceMessageId),
-                gte(DbTableSchema.attendances.attendanceTime, DbTableSchema.employees.employeeCreatedAt),
+                gte(DbTableSchema.attendances.attendanceTime, DbTableSchema.employees.employeeTelegramJoinedAt),
             )
         )
         .orderBy(

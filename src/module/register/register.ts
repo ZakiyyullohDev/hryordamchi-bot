@@ -29,7 +29,7 @@ namespace RegisterModel {
                         tableName: "employees",
                         data: {
                             employeeChatId: chatId,
-                            employeeCreatedAt: new Date()
+                            employeeTelegramJoinedAt: new Date()
                         },
                         targets: [
                             {

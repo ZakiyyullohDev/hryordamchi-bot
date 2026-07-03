@@ -74,8 +74,8 @@ export default function app(routes: express.Router[]) {
     }
 
     async function botRunner() {
-        initEvents();
         initCommands();
+        initEvents();
     }
 
     async function httpRunner() {

@@ -28,11 +28,13 @@ namespace CommandsConfig {
                 },
                 targets: [
                     {
-                        targetColumn: 'employeeChatId',
-                        targetValue: null
+                        targetColumn: 'employeeId',
+                        targetValue: employee.employeeId
                     }
                 ]
             })
+            
+            await bot.sendMessage(chatId, 'Tizimdan muvaffaqiyatli chiqdingiz ✅')
         })
     }
 
