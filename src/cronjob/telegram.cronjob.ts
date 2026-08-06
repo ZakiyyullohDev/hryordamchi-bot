@@ -15,18 +15,16 @@ namespace TelegramCronjob {
     }
     
     export async function resendAttendanceMessages(bot: TelegramBot) {
-        if (isResending) return
+        if (isResending) return;
         isResending = true;
         
         try {
             const notSendedAttendanceMessages = await AttendanceQuery.getNotSendedAttendancesMessages();
             if (!notSendedAttendanceMessages.length) {
-                isResending = false;
                 return;
             }
             
             for (const item of notSendedAttendanceMessages) {
-                
                 try {
                     const { date, timeWithoutSeconds } = GlobalUtils.getDateAndTime(item.attendanceTime);
                     const checkType = item.attendanceType === 'checkIn' ? '✅ <b>Ishga Kelish qayd etildi</b>' : '👋 <b>Ishdan Ketish qayd etildi</b>';
@@ -40,19 +38,18 @@ namespace TelegramCronjob {
 👤 ${item.employeeFirstName} ${item.employeeLastName}
 💼 ${item.roleName}
 🏢 ${item.branchName}
-                        
+
 🕘 <b>${date} ${timeWithoutSeconds}</b>
 🚀 Ish kuningiz unumli o'tsin!
 `;
                     } else {
-                        
                         fixedText = `
                         ${checkType}
                         
 👤 ${item.employeeFirstName} ${item.employeeLastName}
 💼 ${item.roleName}
 🏢 ${item.branchName}
-                
+                        
 🕘 <b>${date} ${timeWithoutSeconds}</b>
 😊 Yaxshi dam oling!
 `;
@@ -74,29 +71,29 @@ namespace TelegramCronjob {
                             }
                         ]
                     });
-                    
-                    return                
+
                 } catch (error) {
                     continue
                 }
             }
         } catch (error) {
+
         } finally {
             isResending = false;
         }
     }
     
     export async function sendNotComeWarningMessage(bot: TelegramBot) {
-        const { todayDate, nowTimeStr } = GlobalUtils.getNowTime()
+        const { todayDate, nowTimeStr } = GlobalUtils.getNowTime();
+        const { date, timeWithoutSeconds } = GlobalUtils.getDateAndTime(new Date())
         
-        const matchedWorkshifts = await WorkshiftsQuery.getWorkshiftsByTime({ workshiftComeTime: nowTimeStr })
+        const matchedWorkshifts = await WorkshiftsQuery.getWorkshiftsByTime({ workshiftComeTime: nowTimeStr });
         if (!matchedWorkshifts.length) {
-            return
+            return;
         };
         
         for (const workshift of matchedWorkshifts) {
             const employees = await EmployeesQuery.getTelegramEmployeesByWorkshift(workshift.workshiftId);
-            const { date, timeWithoutSeconds } = GlobalUtils.getDateAndTime(new Date());
             
             for (const employee of employees) {
                 const todaysCheckin = await AttendanceQuery.checkEmployeeOldAttendances({
@@ -106,7 +103,7 @@ namespace TelegramCronjob {
                 });
                 
                 if (todaysCheckin.length) {
-                    continue
+                    continue;
                 };
                 
                 const sendingText = `
@@ -122,6 +119,7 @@ namespace TelegramCronjob {
                 try {
                     await bot.sendMessage(employee.employeeChatId!, sendingText, { parse_mode: 'HTML' });
                 } catch (error) {
+                    continue;
                 }
             }
         }
@@ -145,9 +143,18 @@ namespace TelegramCronjob {
                     attendanceType: 'checkIn',
                     attendanceTime: todayDate
                 });
+                if (!todaysCheckin.length) {
+                    continue;
+                }
+
+                const todaysCheckout = await AttendanceQuery.checkEmployeeOldAttendances({
+                    employeeId: employee.employeeId,
+                    attendanceType: 'checkOut', 
+                    attendanceTime: todayDate
+                });
                 
-                if (todaysCheckin.length) {
-                    continue
+                if (todaysCheckout.length) {
+                    continue;
                 };
                 
                 const sendingText = `
@@ -163,6 +170,7 @@ namespace TelegramCronjob {
                 try {
                     await bot.sendMessage(employee.employeeChatId!, sendingText, { parse_mode: 'HTML' });
                 } catch (error) {
+                    continue;
                 }
             }
         }

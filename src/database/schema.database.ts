@@ -127,7 +127,8 @@ export const myTextsTable = pgTable('my_texts', {
 export const workshiftsTable = pgTable('workshifts', {
     workshiftId: uuid('workshift_id').defaultRandom().primaryKey(),
     workshiftName: varchar('workshift_name', { length: 64 }).notNull(),
-    workshiftLunchTime: varchar('workshift_lunch_time', { length: 5 }).notNull(),
+    workshiftLunchStartTime: varchar('workshift_lunch_start_time', { length: 5 }).notNull(),
+    workshiftLunchEndTime: varchar('workshift_lunch_end_time', { length: 5 }).notNull(),
     workshiftComeTime: varchar('workshift_come_time', { length: 5 }).notNull(),
     workshiftComeTimeSms: varchar('workshift_ifnot_come_time', { length: 5 }).notNull(),
     workshiftLeaveTime: varchar('workshift_leave_time', { length: 5 }).notNull(),
