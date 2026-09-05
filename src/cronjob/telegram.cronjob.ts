@@ -26,6 +26,30 @@ namespace TelegramCronjob {
             
             for (const item of notSendedAttendanceMessages) {
                 try {
+                    if (!item.employeeChatId) {
+                        continue;
+                    }
+
+                    try {
+                        await bot.getChat(item.employeeChatId!);
+                    } catch (error) {
+                        if (String(error).includes('bot was blocked by the user')) {
+                            await DatabaseFunctions.update({
+                                data: {
+                                    employeeChatId: null
+                                },
+                                tableName: "employees",
+                                targets: [
+                                    {
+                                        targetColumn: "employeeId",
+                                        targetValue: item.employeeId
+                                    }
+                                ]
+                            });
+                        }
+                        continue;
+                    }
+
                     const { date, timeWithoutSeconds } = GlobalUtils.getDateAndTime(item.attendanceTime);
                     const checkType = item.attendanceType === 'checkIn' ? '✅ <b>Ishga Kelish qayd etildi</b>' : '👋 <b>Ishdan Ketish qayd etildi</b>';
                     
@@ -96,6 +120,10 @@ namespace TelegramCronjob {
             const employees = await EmployeesQuery.getTelegramEmployeesByWorkshift(workshift.workshiftId);
             
             for (const employee of employees) {
+                if (!employee.employeeChatId) {
+                    continue;
+                }
+
                 const todaysCheckin = await AttendanceQuery.checkEmployeeOldAttendances({
                     employeeId: employee.employeeId,
                     attendanceType: 'checkIn',
@@ -119,6 +147,20 @@ namespace TelegramCronjob {
                 try {
                     await bot.sendMessage(employee.employeeChatId!, sendingText, { parse_mode: 'HTML' });
                 } catch (error) {
+                    if (String(error).includes('bot was blocked by the user')) {
+                        await DatabaseFunctions.update({
+                            data: {
+                                employeeChatId: null
+                            },
+                            tableName: "employees",
+                            targets: [
+                                {
+                                    targetColumn: "employeeId",
+                                    targetValue: employee.employeeId
+                                }
+                            ]
+                        });
+                    }
                     continue;
                 }
             }
@@ -138,6 +180,10 @@ namespace TelegramCronjob {
             const employees = await EmployeesQuery.getTelegramEmployeesByWorkshift(workshift.workshiftId);
             
             for (const employee of employees) {
+                if (!employee.employeeChatId) {
+                    continue;
+                }
+
                 const todaysCheckin = await AttendanceQuery.checkEmployeeOldAttendances({
                     employeeId: employee.employeeId,
                     attendanceType: 'checkIn',
@@ -170,6 +216,20 @@ namespace TelegramCronjob {
                 try {
                     await bot.sendMessage(employee.employeeChatId!, sendingText, { parse_mode: 'HTML' });
                 } catch (error) {
+                    if (String(error).includes('bot was blocked by the user')) {
+                        await DatabaseFunctions.update({
+                            data: {
+                                employeeChatId: null
+                            },
+                            tableName: "employees",
+                            targets: [
+                                {
+                                    targetColumn: "employeeId",
+                                    targetValue: employee.employeeId
+                                }
+                            ]
+                        });
+                    }
                     continue;
                 }
             }
